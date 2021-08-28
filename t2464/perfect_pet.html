@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>A perfect pet Quiz</title>
+<!-- # flipkod T2464 -->
+<style>
+	html, body {
+		margin: 0;
+		padding: 0;
+	}
+	
+	body { background-color: #c0dfff; font-family: Calibri, Arial, sans-serif; }
+	
+	#container {
+		margin: 20px auto;
+		width: 600px;
+		border: 1px solid #ababab;
+		border-radius: 20px;
+		box-shadow: 1px 1px 1px #777;
+		padding: 20px;
+		background-color: #fff;
+	}
+	
+	#container h1 {
+		text-align: center;
+		font-size: 1.5em;
+		margin: 0;
+		margin-bottom: 20px;
+		padding: 4px 0;
+	}
+	
+	div#subtitle {
+		text-align: center;
+		font-style: italic;
+		margin-bottom: 20px;
+	}
+	
+	#buttons {
+		text-align: center;
+	}
+	
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="cookie.js"></script>
+</head>
+
+<body onload="checkCookie()">
+	<div id="container">
+	<h1>QUIZ: A perfect pet</h1>
+	<div id="subtitle">Welcome to perfect pet quiz, where you'll be answering a few questions and get the answer after the final question.</div>
+	<ul id="questions"></ul>
+	<div id="buttons"><button id="quiz_button">Start quiz</button><button id="quiz_reset" style="display: none;">retry test</button></div>
+	</div>
+</body>
+
+<script type="text/javascript">
+var questions = Array("Your perfect pet is","Your perfect pet likes to","Your perfect pet hates");
+var answers = [];
+answers[0] = Array("Small","Big");
+answers[1] = Array("Eat a lot","Run a lot");
+answers[2] = Array("Hot weather","Cold weather");
+var responses = [];
+var current_question = (!document.cookie ? 0 : document.cookie);
+  
+$(document).ready(function(){
+	function txt_ans(ans){
+		return answers[ans][responses[ans]];
+	}
+	
+	function generate_question(num=0){
+		if (current_question == questions.length){
+			$("#quiz_reset").show();
+			$("#subtitle").html("<strong>My pet is <u>" + txt_ans(0) + "</u>, and although he likes to <u>" + txt_ans(1) + "</u>, he really hates __" + txt_ans(2) + "__.</strong>");
+			$("#questions").html("");
+		} else {
+			$("#subtitle").html(questions[num] + "?");
+			$("#questions").html("");
+			$.each(answers[num],function(i,val){
+				$("#questions").append('<li class="answers"><a href="#" data-id="' + i + '">' + val + '</a></li>');
+			});
+		}
+	}
+	
+	$("#quiz_button").click(function() {
+		$("#quiz_button").hide();
+		generate_question();
+	});
+	
+	$("#quiz_reset").click(function() {
+		$("#quiz_reset").hide();
+		responses = [];
+		current_question = 0;
+		generate_question();
+	});
+	
+	$(document).on('click', '.answers', function(){
+		user_says = event.target.getAttribute("data-id");
+		responses[current_question] = user_says;
+		current_question++;
+		setCookie("current_question", current_question, 30);
+		generate_question(current_question);
+	});
+});
+  
+</script>
+</html>
