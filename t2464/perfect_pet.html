@@ -30,6 +30,19 @@
 		padding: 4px 0;
 	}
 	
+	ul { padding: 0; margin: 0; }
+	
+	li {
+		border: 1px solid #c0dfff;
+		margin-bottom: 6px;
+		list-style-type: none;
+		text-align: center;
+	}
+	
+	li:hover { background-color: #c0dfff; cursor: pointer; }
+	
+	li a { text-decoration: none; color: black; display: block; margin: 4px; }
+	
 	div#subtitle {
 		text-align: center;
 		font-style: italic;
@@ -40,38 +53,44 @@
 		text-align: center;
 	}
 	
+	#buttons button {
+		margin: 0 4px;
+	}
+	
 </style>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="cookie.js"></script>
 </head>
 
-<body onload="checkCookie()">
+<body>
 	<div id="container">
 	<h1>QUIZ: A perfect pet</h1>
 	<div id="subtitle">Welcome to perfect pet quiz, where you'll be answering a few questions and get the answer after the final question.</div>
 	<ul id="questions"></ul>
-	<div id="buttons"><button id="quiz_button">Start quiz</button><button id="quiz_reset" style="display: none;">retry test</button></div>
+	<div id="buttons"><button id="quiz_button">Start quiz</button><button id="quiz_random">randomize</button><button id="quiz_reset" style="display: none;">retry test</button><button id="quiz_scramble" style="display: none;">scramble</button></div>
 	</div>
 </body>
 
 <script type="text/javascript">
 var questions = Array("Your perfect pet is","Your perfect pet likes to","Your perfect pet hates");
 var answers = [];
-answers[0] = Array("Small","Big");
-answers[1] = Array("Eat a lot","Run a lot");
-answers[2] = Array("Hot weather","Cold weather");
+answers[0] = Array("small","big","medium","colossal");
+answers[1] = Array("eat a lot","run a lot","sleep a lot","play a lot");
+answers[2] = Array("hot weather","cold weather","warm weather","polar weather");
 var responses = [];
-var current_question = (!document.cookie ? 0 : document.cookie);
+var current_question = (!localStorage['cq'] || localStorage['cq'] == 0 ? 0 : localStorage['cq']);
   
 $(document).ready(function(){
 	function txt_ans(ans){
-		return answers[ans][responses[ans]];
+		aw = (!localStorage['rp'] || localStorage['rp'].length == 0 ? answers[ans][responses[ans]] : answers[ans][localStorage['rp'][ans * 2]]);
+		return aw;
 	}
 	
 	function generate_question(num=0){
 		if (current_question == questions.length){
 			$("#quiz_reset").show();
-			$("#subtitle").html("<strong>My pet is <u>" + txt_ans(0) + "</u>, and although he likes to <u>" + txt_ans(1) + "</u>, he really hates __" + txt_ans(2) + "__.</strong>");
+			$("#quiz_scramble").show();
+			var pet_name = prompt("You can enter your pet's name (optional)");
+			$("#subtitle").html("<strong>My pet" + (pet_name != null ? " "  + pet_name + " " : " ") + "is <span class=\"an5\">" + txt_ans(0) + "</span>, and although he likes to <span class=\"an5\">" + txt_ans(1) + "</span>, he really hates <span class=\"an5\">" + txt_ans(2) + "</span>.</strong>");
 			$("#questions").html("");
 		} else {
 			$("#subtitle").html(questions[num] + "?");
@@ -82,25 +101,73 @@ $(document).ready(function(){
 		}
 	}
 	
+			// preuzeto sa https://stackoverflow.com/a/3943985
+			String.prototype.shuffle = function () {
+				var a = this.split(""), n = a.length;
+				for(var i = n - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var tmp = a[i]; a[i] = a[j]; a[j] = tmp; }
+				return a.join("");
+			}
+	
 	$("#quiz_button").click(function() {
 		$("#quiz_button").hide();
+		$("#quiz_random").hide();
 		generate_question();
 	});
 	
 	$("#quiz_reset").click(function() {
 		$("#quiz_reset").hide();
+		$("#quiz_scramble").hide();
 		responses = [];
 		current_question = 0;
+		localStorage['cq'] = 0;
+		localStorage['rp'] = "";
 		generate_question();
+	});
+	
+	$("#quiz_random").click(function() {
+		$("#quiz_button").hide();
+		$("#quiz_random").hide();
+		localStorage['rp'] = "";
+		$.each(answers,function(a,val){
+			responses[a] = Math.floor(Math.random() * val.length);
+		});
+		current_question = questions.length;
+		generate_question();
+	});
+	
+	$("#quiz_scramble").click(function() {
+		$('.an5').each(function(i, obj) {
+			if(!obj.getAttribute("data-value")){
+				obj.setAttribute("data-value",$(this).html());
+				$(this).html($(this).html().shuffle());
+			} else {
+				$(this).html(obj.getAttribute("data-value"));
+				obj.removeAttribute("data-value");
+			}
+		});
+		if($(this).html().toLowerCase().indexOf("un") >= 0){
+			$(this).html( $(this).html().replace("un","") );
+		} else {
+			$(this).html( "un" + $(this).html() );
+		}
 	});
 	
 	$(document).on('click', '.answers', function(){
 		user_says = event.target.getAttribute("data-id");
+		console.log("U: " + user_says);
+		console.log(responses);
 		responses[current_question] = user_says;
+		localStorage['rp'] += user_says + ",";
 		current_question++;
-		setCookie("current_question", current_question, 30);
+		localStorage['cq'] = current_question;
 		generate_question(current_question);
 	});
+	
+	if(current_question != 0){
+		$("#quiz_button").hide();
+		$("#quiz_random").hide();
+		generate_question(current_question);
+	}
 });
   
 </script>
